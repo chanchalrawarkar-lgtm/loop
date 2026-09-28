@@ -136,7 +136,7 @@ export default function Home() {
   href="/login"
   className="..."
 >
-  Get Started →
+  Get Started 
 </Link>
             <ArrowRight size={16} />
           </button>
@@ -187,7 +187,7 @@ export default function Home() {
   href="/login"
   className="..."
 >
-  Get Started Free →
+  Get Started Free 
 </Link>
               <ArrowRight size={18} />
             </button>
