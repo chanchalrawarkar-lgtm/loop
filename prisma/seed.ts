@@ -146,11 +146,11 @@ async function main() {
             ? -(0.7 + (i % 3) * 0.1)
             : 0.1,
       status:
-        i % 5 === 0
-          ? "ACTIONED"
-          : i % 3 === 0
-            ? "REVIEWED"
-            : "NEW",
+  i % 5 === 0
+    ? ("ACTIONED" as const)
+    : i % 3 === 0
+      ? ("REVIEWED" as const)
+      : ("NEW" as const),
       workspaceId: workspace.id,
       createdAt: new Date(Date.now() - (140 - i) * 86400000),
     };
@@ -159,10 +159,13 @@ async function main() {
   const createdFeedback = await Promise.all(
     feedbackData.map((item) =>
       prisma.feedback.create({
-        data: item,
-      })
-    )
-  );
+        data:{
+    ...item,
+    status: item.status as "NEW" | "REVIEWED" | "ACTIONED",
+  },
+})
+)
+);
 
   for (let i = 0; i < createdFeedback.length; i++) {
     const feedback = createdFeedback[i];
