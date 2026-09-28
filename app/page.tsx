@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
@@ -123,11 +123,21 @@ export default function Home() {
 
         <div className="flex items-center gap-3">
           <button className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 sm:block">
-            Sign In
+           <Link
+  href="/login"
+  className="..."
+>
+  Sign In
+</Link>
           </button>
 
           <button className="flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:shadow-xl">
-            Get Started
+           <Link
+  href="/login"
+  className="..."
+>
+  Get Started →
+</Link>
             <ArrowRight size={16} />
           </button>
         </div>
@@ -173,13 +183,23 @@ export default function Home() {
 
           <div className="mt-9 flex flex-wrap gap-4">
             <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-6 py-3.5 font-semibold text-white shadow-xl shadow-violet-200 transition hover:-translate-y-1">
-              Get Started Free
+             <Link
+  href="/login"
+  className="..."
+>
+  Get Started Free →
+</Link>
               <ArrowRight size={18} />
             </button>
 
             <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 font-semibold text-slate-700 shadow-sm transition hover:border-violet-200 hover:bg-violet-50">
               <Sparkles size={17} />
-              Explore Dashboard
+             <Link
+  href="/dashboard"
+  className="..."
+>
+  Explore Dashboard
+</Link>
             </button>
           </div>
 
@@ -592,7 +612,12 @@ export default function Home() {
             </div>
 
             <button className="mt-8 flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-violet-700">
-              Explore Dashboard
+              <Link
+  href="/dashboard"
+  className="..."
+>
+  Explore Dashboard
+</Link>
               <ArrowRight size={17} />
             </button>
           </div>
@@ -726,8 +751,9 @@ export default function Home() {
                     What are customers complaining about most?
                   </span>
 
-                  <button className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-600 text-white">
-                    <ArrowRight size={16} />
+                  <button className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-600 text-white"><Link href="/ask">
+  
+                   <ArrowRight size={16} /></Link> 
                   </button>
                 </div>
 
@@ -771,7 +797,12 @@ export default function Home() {
 
             <button className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold">
               <Search size={14} />
-              Search feedback
+              <Link
+  href="/feedback"
+  className="..."
+>
+  Search Feedback
+</Link>
             </button>
           </div>
 
@@ -834,7 +865,12 @@ export default function Home() {
               </p>
 
               <button className="mt-8 flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-violet-200">
-                Generate Report
+                <Link
+  href="/reports"
+  className="..."
+>
+  Generate Report
+</Link>
                 <ArrowRight size={17} />
               </button>
             </div>
@@ -914,7 +950,12 @@ export default function Home() {
           </p>
 
           <button className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 font-bold text-violet-700 shadow-xl transition hover:-translate-y-1">
-            Get Started with LOOP
+            <Link
+  href="/login"
+  className="..."
+>
+  Get Started with LOOP
+</Link>
             <ArrowRight size={18} />
           </button>
         </div>
@@ -943,10 +984,16 @@ export default function Home() {
               <h4 className="font-semibold">Product</h4>
 
               <div className="mt-4 space-y-3 text-sm text-slate-400">
-                <p>Features</p>
-                <p>Analytics</p>
-                <p>Ask LOOP</p>
-                <p>Reports</p>
+                <p><section id="features">Features</section></p>
+                <p><Link href="/trends">
+  Analytics
+</Link></p>
+                <p><Link href="/ask">
+  Ask LOOP
+</Link></p>
+                <p><Link href="/reports">
+  Reports
+</Link></p>
               </div>
             </div>
 
