@@ -1,96 +1,108 @@
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
-import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
     const session = await requireSession();
 
-    const feedback = await prisma.feedback.findMany({
-      where: {
-        workspaceId: session.workspaceId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        id: true,
-        content: true,
-        channel: true,
-        customerLabel: true,
-        sentiment: true,
-        sentimentScore: true,
-        status: true,
-        createdAt: true,
-      },
-    });
+    const workspaceId = session.workspaceId;
 
-    const total = feedback.length;
+    const [
+      totalFeedback,
+      positive,
+      negative,
+      neutral,
+      newCount,
+      reviewedCount,
+      actionedCount,
+      recentFeedback,
+    ] = await Promise.all([
+      prisma.feedback.count({
+        where: { workspaceId },
+      }),
 
-    const positive = feedback.filter(
-      (item) => item.sentiment === "POS"
-    ).length;
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          sentiment: "POS",
+        },
+      }),
 
-    const negative = feedback.filter(
-      (item) => item.sentiment === "NEG"
-    ).length;
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          sentiment: "NEG",
+        },
+      }),
 
-    const neutral = feedback.filter(
-      (item) => item.sentiment === "NEU"
-    ).length;
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          sentiment: "NEU",
+        },
+      }),
 
-    const newCount = feedback.filter(
-      (item) => item.status === "NEW"
-    ).length;
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          status: "NEW",
+        },
+      }),
 
-    const reviewedCount = feedback.filter(
-      (item) => item.status === "REVIEWED"
-    ).length;
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          status: "REVIEWED",
+        },
+      }),
 
-    const actionedCount = feedback.filter(
-      (item) => item.status === "ACTIONED"
-    ).length;
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          status: "ACTIONED",
+        },
+      }),
 
-    const channelCounts: Record<string, number> = {};
+      prisma.feedback.findMany({
+        where: {
+          workspaceId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 10,
+      }),
+    ]);
 
-    feedback.forEach((item) => {
-      channelCounts[item.channel] =
-        (channelCounts[item.channel] || 0) + 1;
-    });
-
-    const channels = Object.entries(channelCounts)
-      .map(([channel, count]) => ({
-        channel,
-        count,
-      }))
-      .sort((a, b) => b.count - a.count);
-
-    return NextResponse.json({
-      success: true,
-      stats: {
-        total,
+    return NextResponse.json(
+      {
+        success: true,
+        workspaceId,
+        totalFeedback,
         positive,
         negative,
         neutral,
-        newCount,
-        reviewedCount,
-        actionedCount,
+        status: {
+          new: newCount,
+          reviewed: reviewedCount,
+          actioned: actionedCount,
+        },
+        recentFeedback,
       },
-      channels,
-      recentFeedback: feedback.slice(0, 10),
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   } catch (error) {
-    console.error("DASHBOARD API ERROR:", error);
-
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    console.error("DASHBOARD_ERROR:", error);
 
     return NextResponse.json(
-      { error: "Failed to load dashboard data" },
+      { error: "Unable to load dashboard data." },
       { status: 500 }
     );
   }

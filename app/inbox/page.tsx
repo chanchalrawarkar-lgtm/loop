@@ -31,7 +31,9 @@ export default function InboxPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch("/api/feedback");
+      const response = await fetch("/api/feedback", {
+  cache: "no-store",
+});
 
       if (!response.ok) {
         throw new Error("Failed to load feedback");

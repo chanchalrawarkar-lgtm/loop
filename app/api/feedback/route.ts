@@ -1,50 +1,33 @@
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { canManageFeedback } from "@/lib/permissions";
-import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await requireSession();
-    const { searchParams } = new URL(request.url);
-
-    const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || "";
-    const sentiment = searchParams.get("sentiment") || "";
 
     const feedback = await prisma.feedback.findMany({
       where: {
         workspaceId: session.workspaceId,
-        ...(search
-          ? {
-              content: {
-                contains: search,
-                mode: "insensitive",
-              },
-            }
-          : {}),
-        ...(status ? { status: status as any } : {}),
-        ...(sentiment ? { sentiment: sentiment as any } : {}),
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    return NextResponse.json(feedback);
+    return NextResponse.json(feedback, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    });
   } catch (error) {
-    console.error("FEEDBACK GET ERROR:", error);
-
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    console.error("GET_FEEDBACK_ERROR:", error);
 
     return NextResponse.json(
-      { error: "Failed to load feedback" },
+      { error: "Unable to load feedback." },
       { status: 500 }
     );
   }
@@ -53,48 +36,46 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await requireSession();
+
     if (!canManageFeedback(session)) {
-  return NextResponse.json(
-    { error: "Forbidden" },
-    { status: 403 }
-  );
-}
+      return NextResponse.json(
+        { error: "You do not have permission to add feedback." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
-    if (!body.content || !body.channel) {
+    const content = String(body.content || "").trim();
+    const channel = String(body.channel || "Manual").trim();
+    const customerLabel = body.customerLabel
+      ? String(body.customerLabel).trim()
+      : null;
+
+    if (!content) {
       return NextResponse.json(
-        { error: "Content and channel are required." },
+        { error: "Feedback content is required." },
         { status: 400 }
       );
     }
 
     const feedback = await prisma.feedback.create({
       data: {
-        content: body.content,
-        channel: body.channel,
-        customerLabel: body.customerLabel || null,
-        sentiment: "NEU",
-        status: "NEW",
+        content,
+        channel,
+        customerLabel,
         workspaceId: session.workspaceId,
+        status: "NEW",
+        sentiment: "NEU",
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      feedback,
-    });
+    return NextResponse.json(feedback, { status: 201 });
   } catch (error) {
-    console.error("FEEDBACK POST ERROR:", error);
-
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    console.error("POST_FEEDBACK_ERROR:", error);
 
     return NextResponse.json(
-      { error: "Failed to create feedback" },
+      { error: "Unable to create feedback." },
       { status: 500 }
     );
   }
@@ -103,56 +84,52 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const session = await requireSession();
+
+    if (!canManageFeedback(session)) {
+      return NextResponse.json(
+        { error: "You do not have permission to update feedback." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
-    const allowedStatuses = ["NEW", "REVIEWED", "ACTIONED"];
+    const id = String(body.id || "");
+    const status = String(body.status || "");
 
-    if (!body.id || !allowedStatuses.includes(body.status)) {
+    if (!id) {
       return NextResponse.json(
-        { error: "Invalid feedback update." },
+        { error: "Feedback id is required." },
         { status: 400 }
       );
     }
 
-    const existing = await prisma.feedback.findFirst({
-      where: {
-        id: body.id,
-        workspaceId: session.workspaceId,
-      },
-    });
-
-    if (!existing) {
+    if (!["NEW", "REVIEWED", "ACTIONED"].includes(status)) {
       return NextResponse.json(
-        { error: "Feedback not found." },
-        { status: 404 }
+        { error: "Invalid feedback status." },
+        { status: 400 }
       );
     }
 
-    const feedback = await prisma.feedback.update({
+    const feedback = await prisma.feedback.updateMany({
       where: {
-        id: body.id,
+        id,
+        workspaceId: session.workspaceId,
       },
       data: {
-        status: body.status,
+        status: status as "NEW" | "REVIEWED" | "ACTIONED",
       },
     });
 
     return NextResponse.json({
       success: true,
-      feedback,
+      updated: feedback.count,
     });
   } catch (error) {
-    console.error("FEEDBACK PATCH ERROR:", error);
-
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    console.error("PATCH_FEEDBACK_ERROR:", error);
 
     return NextResponse.json(
-      { error: "Failed to update feedback" },
+      { error: "Unable to update feedback." },
       { status: 500 }
     );
   }

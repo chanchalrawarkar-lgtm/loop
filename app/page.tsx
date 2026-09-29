@@ -984,7 +984,11 @@ export default function Home() {
               <h4 className="font-semibold">Product</h4>
 
               <div className="mt-4 space-y-3 text-sm text-slate-400">
-                <p><section id="features">Features</section></p>
+                <p>
+  <a href="#features" className="hover:text-violet-600">
+    Features
+  </a>
+</p>
                 <p><Link href="/trends">
   Analytics
 </Link></p>
